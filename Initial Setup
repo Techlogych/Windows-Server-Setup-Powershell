@@ -1,0 +1,70 @@
+
+######################           Initial configurations        ###########################
+
+
+######################           Set-Execution Policy          ###########################
+
+#RemoteSigned is the standard execution policy for windows server#
+Set-ExecutionPolicy RemoteSigned -Force
+
+
+######################           Insert your configurations    ###########################
+
+# Here enter the new computer name #
+$newComName = "WS01"
+
+# Enter IpAdress Subnetmask and defaultgateway #
+$Address = "10.0.2.20"
+$Mask = "24"
+$dGate = "10.0.2.2"
+
+# Enter DNS addresses #
+$DAddress1 = "8.8.8.8"
+$DAddress2 = "9.9.9.9"
+
+# Insert Time Zone #
+$ZTime = "Pacific Standard Time"
+
+
+######################           Change Computer Name           ###########################
+
+# Renames the computer using the enviromental variable(Current), and calls on the $newComNamevalue variable(New)#
+Rename-Computer -ComputerName $env:ComputerName -NewName $newComName
+
+
+######################           Static Ip Adress               ###########################
+
+# InterfaceIndex is found, converted and stored in variable#
+$intIndex = Get-NetAdapter | Select-Object -ExpandProperty InterfaceIndex
+
+# Net configurations gets values from the variables#
+New-NetIPAddress -InterfaceIndex $intIndex -IPAddress $Address -PrefixLength $Mask -DefaultGateway $dGate
+
+# DNS addresses gets values from the variables#
+Set-DnsClientServerAddress -InterfaceIndex $intIndex -ServerAddresses ($DAddress1,$DAddress2)
+
+
+######################           Remote Desktop                 ###########################
+
+# Allows Remote Desktop Connections#
+Set-ItemProperty ‘HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server\‘ -Name “fDenyTSConnections” -Value 0
+
+# Enables Network Level Authentication#
+Set-ItemProperty ‘HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp\‘ -Name “UserAuthentication” -Value 1
+
+# Incoming RDP are allowed through Windows Firewall#
+Enable-NetFirewallRule -DisplayGroup “Remote Desktop”
+
+
+######################           Set Time Zone                 ###########################
+
+#Sets time zone#
+Set-TimeZone -Name $ZTime
+
+
+######################           Windows Update                ###########################
+
+#Download Windows update and accepts them all#
+Install-Package -Name NuGet -Force
+Install-Module PSWindowsUpdate -Force
+Install-WindowsUpdate -Install -AcceptAll -AutoReboot
