@@ -1,0 +1,22 @@
+##################  Install Active Directory using powershell     ###################
+
+
+#################  Universal Variables  ##################
+
+$domName = "lab.local" # Enter domain name here
+$Secure = Read-Host -AsSecureString -Prompt "Enter Safe Mode Administrator Password:" # prompt user to enter password, which is stored in a secure string
+
+##################  Adds role Active Directory Domains services   ###################
+
+Install-windowsfeature AD-domain-services -IncludeManagementTools 
+                                          
+
+#################  Import ADDSDeployment module  ##################
+
+Import-Module ADDSDeployment 
+
+
+#################  Installs ADD Forest  ##################
+
+Install-ADDSForest -DomainName $domName -SafeModeAdministratorPassword $Secure -Force
+                   
